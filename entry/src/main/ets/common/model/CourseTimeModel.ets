@@ -8,10 +8,10 @@
  */
 export class CourseTime {
   // Monday is 0, Morning lesson is 0
-  weekDay: number;
-  slot: number;
+  weekDay: number = 0;
+  slot: number = 0;
 
-  constructor(weekDay: number, slot: number) {
+  constructor(weekDay: number = 0, slot: number = 0) {
     this.weekDay = weekDay;
     this.slot = slot;
   }

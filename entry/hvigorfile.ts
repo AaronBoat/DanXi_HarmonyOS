@@ -1,21 +1,6 @@
-import { Project } from '@ohos/hvigor'
-import { ohosTask } from '@ohos/hvigor-ohos-plugin'
+import { hapTasks } from '@ohos/hvigor-ohos-plugin';
 
 export default {
-  project: {
-    name: 'entry',
-    version: '1.4.5',
-    type: 'app',
-  },
-  targets: {
-    default: {
-      compiler: {
-        options: {
-          sourceMap: true,
-          optimizeLevel: 'O0',
-        },
-      },
-    },
-  },
-  tasks: ohosTask,
-} as Project
+    system: hapTasks,  /* Built-in plugin of Hvigor. It cannot be modified. */
+    plugins:[]         /* Custom plugin to extend the functionality of Hvigor. */
+}

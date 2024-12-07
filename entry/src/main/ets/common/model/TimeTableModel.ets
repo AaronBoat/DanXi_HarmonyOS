@@ -71,12 +71,23 @@ export class TimeTable {
     { hour: 20, minute: 20 }  // 13
   ];
 
-  courses: Course[];
-  startDate: Date;
-
-  constructor(startDate: Date = new Date(), courses: Course[] = []) {
-    this.startDate = startDate;
+  courses: Course[] = [];
+  startDate: Date = new Date();
+  userType: string = '';
+  /**
+   * Constructor
+   * @param courses Courses
+   * @param startDate Semester start date
+   * @param userType User type
+   */
+  constructor(
+    courses: Course[] = [],
+    startDate: Date = new Date(),
+    userType: string = ''
+  ) {
     this.courses = courses;
+    this.startDate = startDate;
+    this.userType = userType;
   }
 
   /**
@@ -158,6 +169,25 @@ export class TimeTable {
     });
 
     return events;
+  }
+
+  /**
+   * Get courses for a specific day
+   * @param day Day number
+   * @returns Array of courses
+   */
+  getCoursesForDay(day: number): Course[] {
+    return this.courses.filter(course => 
+      course.times.some(time => time.weekDay === day)
+    );
+  }
+
+  /**
+   * Check if timetable is empty
+   * @returns True if timetable is empty, false otherwise
+   */
+  isEmpty(): boolean {
+    return this.courses.length === 0;
   }
 
   /**

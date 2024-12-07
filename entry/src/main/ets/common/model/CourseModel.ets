@@ -16,18 +16,19 @@ export enum CourseType {
 /**
  * Course class
  */
+@Observed
 export class Course {
-  teacherIds?: string[];
-  teacherNames?: string[];
-  courseId?: string;
-  courseName?: string;
-  roomId?: string;
-  roomName?: string;
-  availableWeeks?: number[];
-  times?: CourseTime[];
-  courseType: CourseType;
-  credits: number;
-  description: string;
+  teacherIds: string[] = [];
+  teacherNames: string[] = [];
+  courseId: string = '';
+  courseName: string = '';
+  roomId: string = '';
+  roomName: string = '';
+  availableWeeks: number[] = [];
+  times: CourseTime[] = [];
+  courseType: CourseType = CourseType.REQUIRED;
+  credits: number = 0;
+  description: string = '';
 
   constructor(
     courseId: string,

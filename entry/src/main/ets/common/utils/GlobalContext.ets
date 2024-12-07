@@ -1,7 +1,7 @@
 export class GlobalContext {
   private static instance: GlobalContext;
   private constructor() {}
-  private contextMap: Map<string, any> = new Map();
+  private contextMap: Map<string, Object> = new Map();
 
   public static getContext(): GlobalContext {
     if (!GlobalContext.instance) {
@@ -10,11 +10,11 @@ export class GlobalContext {
     return GlobalContext.instance;
   }
 
-  public setObject(key: string, value: any): void {
+  public setObject(key: string, value: Object): void {
     this.contextMap.set(key, value);
   }
 
-  public getObject(key: string): any {
+  public getObject(key: string): Object | undefined {
     return this.contextMap.get(key);
   }
 }
