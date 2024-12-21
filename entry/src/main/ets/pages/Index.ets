@@ -1,5 +1,6 @@
 import router from '@ohos.router';
 import { CommonConstants } from '../common/constants/CommonConstants';
+import CourseTablePage from './CourseTablePage';
 
 @Entry
 @Component
@@ -30,14 +31,7 @@ struct Index {
     Column() {
       Tabs({ barPosition: BarPosition.End, controller: this.tabsController }) {
         TabContent() {
-          Column() {
-            Text('首页')
-              .fontSize(20)
-              .fontWeight(FontWeight.Bold)
-          }
-          .width('100%')
-          .height('100%')
-          .backgroundColor('#F1F3F5')
+          CourseTablePage()
         }
         .tabBar(this.TabBuilder('首页', 0, $r('app.media.home'), $r('app.media.home_selected')))
 
@@ -56,8 +50,7 @@ struct Index {
                     router.pushUrl({ url: 'pages/CoursePage' });
                   })
               }
-              
-              ListItem() {
+　　 　 　 　 ListItem() {
                 Text('课表查询')
                   .fontSize(16)
                   .padding(15)

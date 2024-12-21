@@ -21,7 +21,7 @@ export class CourseTime {
    * @returns Start time in "HH:mm" format
    */
   getStartTime(): string {
-    const timeMap = {
+    const timeMap: Record<number, string> = {
       0: '08:00',
       1: '08:55',
       2: '09:55',
@@ -44,7 +44,7 @@ export class CourseTime {
    * @returns End time in "HH:mm" format
    */
   getEndTime(): string {
-    const timeMap = {
+    const timeMap: Record<number, string> = {
       0: '08:45',
       1: '09:40',
       2: '10:40',
@@ -67,7 +67,7 @@ export class CourseTime {
    * @returns Weekday name in Chinese
    */
   getWeekDayName(): string {
-    const weekDayMap = {
+    const weekDayMap: Record<number, string> = {
       0: '周一',
       1: '周二',
       2: '周三',
@@ -91,7 +91,7 @@ export class CourseTime {
    * Convert to JSON object
    * @returns JSON object
    */
-  toJSON(): object {
+  toJSON(): { weekDay: number; slot: number } {
     return {
       weekDay: this.weekDay,
       slot: this.slot

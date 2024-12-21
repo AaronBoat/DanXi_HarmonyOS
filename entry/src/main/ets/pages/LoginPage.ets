@@ -10,11 +10,17 @@ enum UserGroup {
   VISITOR = 'VISITOR'
 }
 
-const kUserGroupDescription = {
-  [UserGroup.FUDAN_UNDERGRADUATE_STUDENT]: '本科生',
-  [UserGroup.FUDAN_POSTGRADUATE_STUDENT]: '研究生',
-  [UserGroup.VISITOR]: '游客'
+interface UserGroupDescription {
+  FUDAN_UNDERGRADUATE_STUDENT: string;
+  FUDAN_POSTGRADUATE_STUDENT: string;
+  VISITOR: string;
 }
+
+const kUserGroupDescription: UserGroupDescription = {
+  FUDAN_UNDERGRADUATE_STUDENT: '本科生',
+  FUDAN_POSTGRADUATE_STUDENT: '研究生',
+  VISITOR: '游客'
+};
 
 @Entry
 @Component
@@ -28,11 +34,11 @@ struct LoginPage {
   private authService: AuthService = AuthService.getInstance();
   private storageService: StorageService | null = null;
 
-  async aboutToAppear() {
+  async aboutToAppear(): Promise<void> {
     this.storageService = await StorageService.getInstance();
   }
 
-  async login() {
+  async login(): Promise<void> {
     if (!this.username || !this.password) {
       this.errorText = '请输入用户名和密码';
       return;
@@ -58,7 +64,7 @@ struct LoginPage {
     }
   }
 
-  async visitorLogin() {
+  async visitorLogin(): Promise<void> {
     await this.storageService?.setObject('userInfo', {
       id: this.username,
       password: this.password,
@@ -68,7 +74,7 @@ struct LoginPage {
     router.replaceUrl({ url: 'pages/CoursePage' });
   }
 
-  async uisLogin() {
+  async uisLogin(): Promise<void> {
     const loginUrl = 'https://uis.fudan.edu.cn/authserver/login?service=http%3A%2F%2Fjwc.fudan.edu.cn%2Feb%2Fb7%2Fc9397a388023%2Fpage.psp';
     const httpRequest = http.createHttp();
 
@@ -116,18 +122,18 @@ struct LoginPage {
   parseLoginForm(html: string): Record<string, string> {
     const formData: Record<string, string> = {};
     const inputMatches = html.match(/<input[^>]+name="([^"]+)"[^>]+value="([^"]*)"[^>]*>/g);
-    
+
     if (inputMatches) {
       for (const match of inputMatches) {
         const nameMatch = match.match(/name="([^"]+)"/);
         const valueMatch = match.match(/value="([^"]*)"/);
-        
+
         if (nameMatch && valueMatch) {
           formData[nameMatch[1]] = valueMatch[1];
         }
       }
     }
-    
+
     return formData;
   }
 
@@ -156,7 +162,7 @@ struct LoginPage {
 
   handleLoginError(error: Error) {
     let errorMessage = '登录失败';
-    
+
     switch (error.message) {
       case '密码错误':
         errorMessage = '用户名或密码错误';
@@ -177,13 +183,13 @@ struct LoginPage {
   }
 
   @Builder
-  loginHeader() {
+  loginHeader(): void {
     Column() {
       Image($r('app.media.app_icon'))
         .width(100)
         .height(100)
         .margin({ top: 50, bottom: 20 })
-      
+
       Text('登录')
         .fontSize(24)
         .fontWeight(FontWeight.Bold)
@@ -194,7 +200,7 @@ struct LoginPage {
   }
 
   @Builder
-  loginForm() {
+  loginForm(): void {
     Column() {
       // 用户组选择
       Row() {
@@ -211,7 +217,7 @@ struct LoginPage {
       .margin({ bottom: 20 })
 
       // 用户名输入
-      TextInput({ 
+      TextInput({
         placeholder: '请输入用户名',
         text: this.username
       })
@@ -226,7 +232,7 @@ struct LoginPage {
         })
 
       // 密码输入
-      TextInput({ 
+      TextInput({
         placeholder: '请输入密码',
         text: this.password
       })
@@ -275,7 +281,7 @@ struct LoginPage {
     .alignItems(HorizontalAlign.Center)
   }
 
-  build() {
+  build(): void {
     Column() {
       // 顶部空白区域
       Blank().height('10%')

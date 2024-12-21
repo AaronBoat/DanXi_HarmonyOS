@@ -46,6 +46,23 @@ export class TimeNow {
 }
 
 /**
+ * TimeTableModel interface
+ * Represents a course in the timetable
+ */
+export interface TimeTableModel {
+  id: string
+  name: string
+  teacher: string
+  location: string
+  weekday: number  // 0-6，表示星期
+  startSection: number
+  endSection: number
+  startWeek: number
+  endWeek: number
+  color?: string  // 课程颜色
+}
+
+/**
  * TimeTable class
  * Represents a complete course timetable
  */
