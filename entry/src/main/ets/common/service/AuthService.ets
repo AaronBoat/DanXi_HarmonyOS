@@ -1,7 +1,16 @@
-import { HttpService } from './HttpService';
+import HttpService from './HttpService';
 import { StorageService } from './StorageService';
 import promptAction from '@ohos.promptAction';
 import router from '@ohos.router';
+import { ResponseResult } from '../model/ResponseResult'
+
+// 定义登录响应结果的接口
+export interface LoginResponse {
+  success: boolean;
+  token?: string;
+  userInfo?: Record<string, string>;
+  message?: string;
+}
 
 export class AuthService {
   private static instance: AuthService;
@@ -24,16 +33,17 @@ export class AuthService {
 
   public async login(username: string, password: string): Promise<boolean> {
     try {
-      const response = await this.httpService.post('https://your-auth-server.com/login', {
-        username,
-        password
-      });
+      let data: Record<string, Object> = {
+        "username": username,
+        "password": password
+      }
+      const response: ResponseResult<string> = await this.httpService.post('https://your-auth-server.com/login', data);
 
-      const result = JSON.parse(response);
+      const result: LoginResponse = JSON.parse(response.data ?? "");
       if (result.success) {
-        await this.storageService?.setString('token', result.token);
+        await this.storageService?.setString('token', result.token ?? "");
         await this.storageService?.setString('username', username);
-        await this.storageService?.setObject('userInfo', result.userInfo || {});
+        await this.storageService?.setObject('userInfo', result.userInfo ?? Object());
         
         // 显示登录成功提示
         promptAction.showToast({
@@ -73,9 +83,11 @@ export class AuthService {
   public async logout(): Promise<void> {
     try {
       // 可选：调用服务器注销接口
-      await this.httpService.post('https://your-auth-server.com/logout', {
-        token: await this.storageService?.getString('token')
-      });
+      let token: string = await this.storageService?.getString('token') ?? "";
+      let data: Record<string, Object> = {
+        "token": token
+      }
+      await this.httpService.post<void>('https://your-auth-server.com/logout', data); // 显式指定泛型参数
     } catch (error) {
       console.error('Logout server call failed:', error);
     }
@@ -99,7 +111,8 @@ export class AuthService {
     return await this.storageService?.getString('username', '') || '';
   }
 
-  public async getUserInfo(): Promise<Object> {
-    return await this.storageService?.getObject('userInfo', {}) || {};
+  public async getUserInfo(): Promise<Record<string, string>> {
+    let emptyInfo: Record<string, string> = {};
+    return await this.storageService?.getObject<Record<string, string>>('userInfo', emptyInfo) ?? emptyInfo;
   }
 }

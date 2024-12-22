@@ -2,8 +2,17 @@
  * Course table styles
  */
 
+// 定义接口描述 Colors 对象的结构
+interface ColorsInterface {
+  primary: string;
+  white: string;
+  grayLight: string;
+  courseCards: string[];
+}
+
+// 使用接口类型替代任何类型
 // 颜色
-export const Colors = {
+export const Colors: ColorsInterface = {
   primary: '#2196F3',
   white: '#FFFFFF',
   grayLight: '#F5F5F5',
@@ -19,8 +28,29 @@ export const Colors = {
   ]
 };
 
+// 定义接口描述 Sizes 对象的结构
+interface SizesInterface {
+  spacingTiny: number;
+  spacingSmall: number;
+  spacingNormal: number;
+  spacingLarge: number;
+
+  radiusSmall: number;
+  radiusNormal: number;
+  radiusLarge: number;
+
+  shadowRadius: number;
+  shadowOffsetX: number;
+  shadowOffsetY: number;
+  shadowColor: string;
+  shadowColorDark: string;
+
+  borderWidth: number;
+}
+
+// 使用接口类型替代任何类型
 // 尺寸
-export const Sizes = {
+export const Sizes: SizesInterface = {
   // 间距
   spacingTiny: 4,
   spacingSmall: 8,
@@ -43,8 +73,25 @@ export const Sizes = {
   borderWidth: 1
 };
 
+// 文本样式接口
+interface TextStyleInterface {
+  fontSize: number;
+  fontWeight: FontWeight;
+  opacity: number;
+}
+
+// 排版接口
+interface TypographyInterface {
+  titleLarge: TextStyleInterface;
+  titleNormal: TextStyleInterface;
+  titleSmall: TextStyleInterface;
+  bodyNormal: TextStyleInterface;
+  bodySmall: TextStyleInterface;
+  caption: TextStyleInterface
+}
+
 // 排版
-export const Typography = {
+export const Typography: TypographyInterface = {
   // 标题
   titleLarge: {
     fontSize: 20,
@@ -78,8 +125,27 @@ export const Typography = {
   }
 };
 
+// 定义动画配置接口
+interface AnimationConfig {
+  duration: number;
+  curve: Curve;
+  delay: number;
+  iterations: number;
+  playMode: PlayMode;
+}
+
+// 定义 Animations 接口
+interface AnimationsInterface {
+  durationFast: number;
+  durationNormal: number;
+  durationSlow: number;
+  curveDefault: Curve;
+  fadeIn: AnimationConfig;
+  scaleNormal: AnimationConfig;
+}
+
 // 动画
-export const Animations = {
+export const Animations: AnimationsInterface = {
   // 持续时间
   durationFast: 150,
   durationNormal: 250,

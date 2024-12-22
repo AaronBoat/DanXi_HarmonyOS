@@ -17,11 +17,11 @@ struct CoursePage {
   courseCard(course: Course) {
     Column() {
       Row() {
-        Text(course.name)
+        Text(course.courseName)
           .fontSize(18)
           .fontWeight(FontWeight.Bold)
         Blank()
-        Text(course.type)
+        Text(course.courseType)
           .fontSize(14)
           .fontColor(Color.Gray)
       }
@@ -30,18 +30,18 @@ struct CoursePage {
 
       Row() {
         Column() {
-          Text(`教师：${course.teacher}`)
+          Text(`教师：${course.teacherNames}`)
             .fontSize(14)
-          Text(`时间：${course.time}`)
+          Text(`时间：${course.times}`)
             .fontSize(14)
-          Text(`地点：${course.location}`)
+          Text(`地点：${course.roomName}`)
             .fontSize(14)
         }
         .alignItems(HorizontalAlign.Start)
         .layoutWeight(1)
 
         Column() {
-          Text(`学分：${course.credit}`)
+          Text(`学分：${course.credits}`)
             .fontSize(14)
         }
       }
@@ -58,8 +58,8 @@ struct CoursePage {
     try {
       this.isLoading = true;
       const userInfo = await this.authService.getUserInfo();
-      this.selectedSemester = userInfo.currentSemester || '';
-      this.courses = await this.courseService.getCurrentCourses();
+      this.selectedSemester = userInfo['currentSemester'] || '';
+      this.courses = await this.courseService.getCourseTable();
     } catch (error) {
       promptAction.showToast({ 
         message: '获取课程失败，请检查网络',
@@ -117,7 +117,13 @@ struct CoursePage {
         .width('90%')
         .margin({ top: 20 })
         .onClick(async () => {
-          const exportedCount = await this.courseService.exportToCalendar(this.courses);
+          let exportedCount: number = 0;
+          let course: Course;
+          for (course of this.courses) {
+            if (await this.courseService.exportCourseToCalendar(course.courseId)) {
+              exportedCount++;
+            }
+          }
           promptAction.showToast({
             message: `成功导出 ${exportedCount} 门课程到日历`,
             duration: 2000

@@ -2,11 +2,12 @@ import { CourseService } from '../common/service/CourseService'
 import { TimeTableModel } from '../common/model/TimeTableModel'
 import promptAction from '@ohos.promptAction'
 import router from '@ohos.router'
+import { Course } from '../common/model/CourseModel';
 
 @Entry
 @Component
 export default struct CourseTablePage {
-  @State courses: TimeTableModel[] = []
+  @State courses: Course[] = []
   @State isLoading: boolean = true
   private courseService: CourseService = CourseService.getInstance()
 
@@ -82,7 +83,7 @@ export default struct CourseTablePage {
       } else {
         Grid() {
           // 星期头部
-          ForEach(['一', '二', '三', '四', '五', '六', '日'], (day, index) => {
+          ForEach(['一', '二', '三', '四', '五', '六', '日'], (day:string, index:number) => {
             GridItem() {
               Text(day)
                 .fontSize(12)
@@ -95,7 +96,7 @@ export default struct CourseTablePage {
           })
 
           // 节次头部
-          ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], (section) => {
+          ForEach([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], (section:number) => {
             GridItem() {
               Text(section.toString())
                 .fontSize(12)
@@ -108,7 +109,7 @@ export default struct CourseTablePage {
           })
 
           // 课程网格
-          ForEach(this.courses, (course) => {
+          ForEach(this.courses, (course:TimeTableModel) => {
             GridItem() {
               this.courseGridItem(course, course.startSection, course.weekday)
             }
@@ -139,7 +140,7 @@ export default struct CourseTablePage {
           }
 
           const exportPromises = this.courses.map(course => 
-            this.courseService.exportCourseToCalendar(course.id)
+            this.courseService.exportCourseToCalendar(course.courseId)
           )
           
           try {

@@ -8,11 +8,11 @@ export class StorageService {
   private constructor() {}
 
   public static async getInstance(): Promise<StorageService> {
-    if (!this.instance) {
-      this.instance = new StorageService();
-      await this.instance.init();
+    if (!StorageService.instance) {
+      StorageService.instance = new StorageService();
+      await StorageService.instance.init();
     }
-    return this.instance;
+    return StorageService.instance;
   }
 
   private async init(): Promise<void> {
@@ -20,7 +20,7 @@ export class StorageService {
       this.preferences = await storage.getPreferences(GlobalContext.getContext(), 'danxi_prefs');
     } catch (error) {
       console.error('Storage initialization error:', error);
-      throw error;
+      throw Error(error);
     }
   }
 
@@ -56,7 +56,7 @@ export class StorageService {
     }
   }
 
-  public async getObject(key: string, defaultValue: Object = {}): Promise<Object> {
+  public async getObject<T>(key: string, defaultValue: T): Promise<T> {
     try {
       const jsonStr = await this.getString(key);
       return jsonStr ? JSON.parse(jsonStr) : defaultValue;
@@ -80,8 +80,8 @@ export class StorageService {
       await this.init();
     }
     try {
-      for (const [key, value] of Object.entries(keyValuePairs)) {
-        await this.preferences?.put(key, value);
+      for (const keyValuePair of Object.entries(keyValuePairs)) {
+        await this.preferences?.put(keyValuePair[0], keyValuePair[1]);
       }
       await this.preferences?.flush();
     } catch (error) {

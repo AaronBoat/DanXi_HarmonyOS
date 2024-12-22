@@ -1,6 +1,7 @@
 import router from '@ohos.router'
-import CourseService, { CourseDetail } from '../common/service/CourseService'
+import { CourseService, CourseDetail } from '../common/service/CourseService'
 
+@Entry
 @Component
 export default struct CourseDetailPage {
   @State courseDetail: CourseDetail | null = null
@@ -41,7 +42,7 @@ export default struct CourseDetailPage {
     Column() {
       // 导航栏
       Row() {
-        Image($r('app.media.back'))
+        Image($r(`app.media.back`))
           .width(24)
           .height(24)
           .margin({ right: 10 })

@@ -6,7 +6,26 @@
 import { BaseService } from './BaseService';
 import { Course } from '../model/CourseModel';
 import { TimeTable } from '../model/TimeTableModel';
-import calendar from '@ohos.calendar';
+import calendarManager  from '@ohos.calendarManager';
+
+// 定义重复规则接口
+interface RecurrenceRule {
+  frequency: string; // 重复频率
+  interval: number; // 重复间隔
+  count: number; // 重复次数
+}
+
+// 定义 EventInfo 接口，包含 repeatRule 接口
+interface EventInfo {
+  title: string;
+  description: string;
+  startTime: number;
+  endTime: number;
+  location: calendarManager.Location;
+  isAllDay: boolean;
+  repeatRule?: RecurrenceRule; // 重复规则
+  type: calendarManager.EventType;
+}
 
 @Observed
 export class CalendarService extends BaseService {
@@ -33,7 +52,7 @@ export class CalendarService extends BaseService {
    * @param startDate Semester start date
    * @returns Number of successfully exported courses
    */
-  async exportToCalendar(timeTable: TimeTable): Promise<number> {
+  async exportToCalendar(timeTable: TimeTable, calendar:calendarManager.Calendar): Promise<number> {
     let successCount = 0;
 
     for (const course of timeTable.courses) {
@@ -45,11 +64,15 @@ export class CalendarService extends BaseService {
             timeTable.startDate,
             time.weekDay
           );
-          const [startHour, startMinute] = time.getStartTime().split(':').map(Number);
+          const startHourMinute: number[] = time.getStartTime().split(':').map(Number);
+          const startHour = startHourMinute[0];
+          const startMinute = startHourMinute[1];
           startDate.setHours(startHour, startMinute, 0, 0);
 
           // 计算事件结束时间
-          const [endHour, endMinute] = time.getEndTime().split(':').map(Number);
+          const endHourMinute: number[] = time.getEndTime().split(':').map(Number);
+          const endHour = endHourMinute[0];
+          const endMinute = endHourMinute[1];
           const endDate = new Date(startDate);
           endDate.setHours(endHour, endMinute, 0, 0);
 
@@ -61,19 +84,22 @@ export class CalendarService extends BaseService {
             const eventEndDate = new Date(endDate);
             eventEndDate.setDate(eventEndDate.getDate() + (week - 1) * 7);
 
-            const eventInfo = {
+            const eventInfo: EventInfo = {
               title: course.courseName,
               description: `教师：${course.teacherNames.join(', ')}\n地点：${course.roomName}`,
               startTime: eventStartDate.getTime(),
               endTime: eventEndDate.getTime(),
-              location: course.roomName,
+              location: {
+                location: course.roomName
+              },
               isAllDay: false,
               // 每周重复
               repeatRule: {
                 frequency: 'WEEKLY',
                 interval: 1,
                 count: 1 // 只重复一次，因为我们手动为每周创建事件
-              }
+              },
+              type: calendarManager.EventType.NORMAL
             };
 
             await calendar.addEvent(eventInfo);
@@ -114,7 +140,7 @@ export class CalendarService extends BaseService {
    * @param timeTable TimeTable object containing courses to delete
    * @returns Number of successfully deleted events
    */
-  async deleteAllCourseEvents(timeTable: TimeTable): Promise<number> {
+  async deleteAllCourseEvents(timeTable: TimeTable, calendar:calendarManager.Calendar): Promise<number> {
     let deletedCount = 0;
     
     try {

@@ -22,6 +22,13 @@ const kUserGroupDescription: UserGroupDescription = {
   VISITOR: '游客'
 };
 
+interface UserInfo {
+  id: string;
+  password: string;
+  name: string;
+  userGroup: UserGroup;
+}
+
 @Entry
 @Component
 struct LoginPage {
@@ -65,12 +72,13 @@ struct LoginPage {
   }
 
   async visitorLogin(): Promise<void> {
-    await this.storageService?.setObject('userInfo', {
+    let userInfo: UserInfo = {
       id: this.username,
       password: this.password,
       name: '游客',
       userGroup: UserGroup.VISITOR
-    });
+    };
+    await this.storageService?.setObject('userInfo', userInfo);
     router.replaceUrl({ url: 'pages/CoursePage' });
   }
 
@@ -104,16 +112,17 @@ struct LoginPage {
       this.checkLoginResponse(responseText);
 
       // 保存用户信息
-      await this.storageService?.setObject('userInfo', {
+      let userInfo: UserInfo = {
         id: this.username,
         password: this.password,
         name: await this.fetchStudentName(),
         userGroup: this.userGroup
-      });
+      };
+      await this.storageService?.setObject('userInfo', userInfo);
 
       router.replaceUrl({ url: 'pages/CoursePage' });
     } catch (error) {
-      throw error;
+      throw Error(error);
     } finally {
       httpRequest.destroy();
     }
@@ -139,7 +148,11 @@ struct LoginPage {
 
   encodeFormData(data: Record<string, string>): string {
     return Object.entries(data)
-      .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+      .map((keyValue) => {
+        const key = keyValue[0];
+        const value = keyValue[1];
+        return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+      })
       .join('&');
   }
 
@@ -205,7 +218,7 @@ struct LoginPage {
       // 用户组选择
       Row() {
         ForEach(Object.values(UserGroup), (group: UserGroup) => {
-          Button(kUserGroupDescription[group])
+          Button(Reflect.get(kUserGroupDescription, group))
             .backgroundColor(this.userGroup === group ? '#1698CE' : '#F0F0F0')
             .fontColor(this.userGroup === group ? Color.White : Color.Black)
             .margin({ right: 10 })

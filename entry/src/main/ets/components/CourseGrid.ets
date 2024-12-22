@@ -6,6 +6,11 @@ import { TimeTable, Event, TableDisplayType } from '../common/model/TimeTableMod
 import { CourseCard } from './CourseCard';
 import { Colors, Sizes, Animations, Typography } from '../common/styles/CourseTableStyles';
 
+export interface TimeHeader {
+  slots: string;
+  time: string;
+}
+
 @Component
 export struct CourseGrid {
   @Link timeTable: TimeTable;
@@ -14,7 +19,7 @@ export struct CourseGrid {
   @State scrollOffset: number = 0;
   
   // 时间表头
-  private timeHeaders = [
+  private timeHeaders: TimeHeader[] = [
     { slots: '1-2', time: '08:00\n09:40' },
     { slots: '3-4', time: '09:55\n11:35' },
     { slots: '5', time: '11:45\n12:30' },
@@ -67,7 +72,7 @@ export struct CourseGrid {
       // 课程表网格
       Grid() {
         // 左侧时间表头
-        ForEach(this.timeHeaders, (header, index) => {
+        ForEach(this.timeHeaders, (header: TimeHeader, index: number) => {
           GridItem() {
             Column() {
               Text(header.slots + '节')
@@ -93,9 +98,9 @@ export struct CourseGrid {
         })
 
         // 顶部星期表头
-        ForEach(this.weekHeaders, (header, index) => {
+        ForEach(this.weekHeaders, (weekHeader: string, index: number) => {
           GridItem() {
-            Text(header)
+            Text(weekHeader)
               .fontSize(Typography.bodyNormal.fontSize)
               .fontWeight(Typography.bodyNormal.fontWeight)
               .opacity(Typography.bodyNormal.opacity)
@@ -151,7 +156,7 @@ export struct CourseGrid {
    */
   private getSlotIndex(slot: number): number {
     // 将课程节次映射到网格行索引
-    const slotMap = {
+    const slotMap: Record<number, number> = {
       0: 0, // 1节
       1: 0, // 2节
       2: 1, // 3节

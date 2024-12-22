@@ -1,9 +1,10 @@
-import { HttpService } from './HttpService'
+import HttpService from './HttpService'
 import { ResponseResult } from '../model/ResponseResult'
 import { TimeTableModel } from '../model/TimeTableModel'
 import storage from '@ohos.data.storage'
+import { Course } from '../model/CourseModel'
 
-export interface Course {
+interface CourseInterface {
   id: string
   name: string
   teacher: string
@@ -13,7 +14,7 @@ export interface Course {
   type: string
 }
 
-export interface CourseDetail extends Course {
+export interface CourseDetail extends CourseInterface {
   semester: string
   weekRange: string
   classTime: string
@@ -44,7 +45,7 @@ export class CourseService {
 
   public async getCourseTable(): Promise<Course[]> {
     try {
-      const response: ResponseResult<TimeTableModel[]> = await this.httpService.get('/course/table', { needToken: true })
+      const response: ResponseResult<Course[]> = await this.httpService.get('/course/table', { needToken: true })
       if (response.code === 200 && response.data) {
         await this.cacheCourseTable(response.data)
         return response.data
@@ -63,7 +64,7 @@ export class CourseService {
     try {
       const response: ResponseResult<CourseDetail> = await this.httpService.get(`/course/detail/${courseId}`, { needToken: true })
       if (response.code === 200) {
-        return response.data
+        return response.data ?? null
       } else {
         throw new Error('Failed to fetch course detail')
       }
@@ -77,7 +78,7 @@ export class CourseService {
     try {
       const response: ResponseResult<Course> = await this.httpService.get('/course/next', { needToken: true })
       if (response.code === 200) {
-        return response.data
+        return response.data ?? null
       } else {
         throw new Error('Failed to fetch next course')
       }
@@ -87,7 +88,7 @@ export class CourseService {
     }
   }
 
-  private async cacheCourseTable(courses: TimeTableModel[]): Promise<void> {
+  private async cacheCourseTable(courses: Course[]): Promise<void> {
     try {
       await this.initStorage()
       if (this.storagePreferences) {
@@ -99,12 +100,12 @@ export class CourseService {
     }
   }
 
-  private async getCachedCourseTable(): Promise<TimeTableModel[] | null> {
+  private async getCachedCourseTable(): Promise<Course[] | null> {
     try {
       await this.initStorage()
       if (this.storagePreferences) {
-        const cachedTable = await this.storagePreferences.get('course_table')
-        return cachedTable ? JSON.parse(cachedTable as string) : null
+        const cachedTable = this.storagePreferences.get('course_table', 'not_found')
+        return cachedTable ? JSON.parse(cachedTable.toString()) : null
       }
       return null
     } catch (error) {

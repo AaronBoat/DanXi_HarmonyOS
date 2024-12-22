@@ -1,4 +1,5 @@
-import { HttpService } from './HttpService'
+import HttpService from './HttpService'
+import { ResponseResult } from '../model/ResponseResult'
 
 export interface UserProfile {
   id: number
@@ -18,15 +19,15 @@ export class UserService {
   }
 
   public static getInstance(): UserService {
-    if (!this._instance) {
-      this._instance = new UserService()
+    if (!UserService._instance) {
+      UserService._instance = new UserService()
     }
-    return this._instance
+    return UserService._instance
   }
 
   public async getUserProfile(): Promise<UserProfile | null> {
     try {
-      const result = await this.httpService.get('https://your-api.com/user/profile', {
+      const result: ResponseResult<UserProfile | null> = await this.httpService.get('https://your-api.com/user/profile', {
         headers: { 'Authorization': `Bearer ${globalThis.token}` }
       })
       return result?.data || null
@@ -38,11 +39,12 @@ export class UserService {
 
   public async updateUserProfile(profile: Partial<UserProfile>): Promise<boolean> {
     try {
-      const result = await this.httpService.post('https://your-api.com/user/update', {
-        ...profile,
-        token: globalThis.token
-      })
-      return result?.success || false
+      let data: Record<string, Object> = {
+        "token": globalThis.token,
+        "profile": profile
+      }
+      const result: ResponseResult<boolean> = await this.httpService.post('https://your-api.com/user/update', data)
+      return result?.data ?? false
     } catch (error) {
       console.error('更新用户信息失败:', error)
       return false
@@ -51,12 +53,13 @@ export class UserService {
 
   public async changePassword(oldPassword: string, newPassword: string): Promise<boolean> {
     try {
-      const result = await this.httpService.post('https://your-api.com/user/change-password', {
-        oldPassword,
-        newPassword,
-        token: globalThis.token
-      })
-      return result?.success || false
+      let data: Record<string, Object> = {
+        "token": globalThis.token,
+        "oldPassword": oldPassword,
+        "newPassword": newPassword
+      }
+      const result: ResponseResult<boolean> = await this.httpService.post('https://your-api.com/user/change-password', data)
+      return result?.data || false
     } catch (error) {
       console.error('修改密码失败:', error)
       return false

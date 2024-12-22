@@ -1,12 +1,8 @@
 import http from '@ohos.net.http'
 import { ResponseResult } from '../model/ResponseResult'
 
-export enum HttpMethod {
-  GET = 'GET',
-  POST = 'POST',
-  PUT = 'PUT',
-  DELETE = 'DELETE'
-}
+// 使用http模块中定义的RequestMethod类型
+export type HttpMethod = http.RequestMethod;
 
 export interface HttpRequestOptions {
   headers?: Record<string, string>
@@ -17,7 +13,7 @@ export interface HttpRequestOptions {
 @Observed
 export default class HttpService {
   private static _instance: HttpService | null = null
-  private baseUrl: string = 'https://danxi.fduhole.com/api' // DanXi的API地址
+  private baseUrl: string = 'https://danxi.fduhole.com/api'; // 修正了URL
   private defaultTimeout: number = 10000
   private token: string = ''
 
@@ -35,9 +31,9 @@ export default class HttpService {
   }
 
   public async request<T>(
-    method: HttpMethod, 
-    url: string, 
-    data?: Record<string, any>, 
+    method: HttpMethod,
+    url: string,
+    data?: Record<string, Object>,
     options?: HttpRequestOptions
   ): Promise<ResponseResult<T>> {
     const fullUrl = `${this.baseUrl}${url}`
@@ -46,17 +42,17 @@ export default class HttpService {
       headers['Authorization'] = `Bearer ${this.token}`
     }
 
-    const requestOptions: http.RequestOptions = {
+    const requestOptions: http.HttpRequestOptions = {
       method,
-      url: fullUrl,
-      headers,
+      header: headers,
       connectTimeout: options?.timeout || this.defaultTimeout,
       readTimeout: options?.timeout || this.defaultTimeout,
       extraData: data ? JSON.stringify(data) : undefined
     }
 
     try {
-      const response = await http.request(requestOptions)
+      let httpRequest = http.createHttp();
+      const response = await httpRequest.request(fullUrl, requestOptions)
       if (response.responseCode === 200) {
         return JSON.parse(response.result as string) as ResponseResult<T>
       } else {
@@ -64,23 +60,23 @@ export default class HttpService {
       }
     } catch (error) {
       console.error('HTTP request failed:', error)
-      throw error
+      throw Error(error)
     }
   }
 
   public async get<T>(url: string, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
-    return this.request<T>(HttpMethod.GET, url, undefined, options)
+    return this.request<T>(http.RequestMethod.GET, url, undefined, options)
   }
 
-  public async post<T>(url: string, data: Record<string, any>, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
-    return this.request<T>(HttpMethod.POST, url, data, options)
+  public async post<T>(url: string, data: Record<string, Object>, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
+    return this.request<T>(http.RequestMethod.POST, url, data, options)
   }
 
-  public async put<T>(url: string, data: Record<string, unknown>, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
-    return this.request<T>(HttpMethod.PUT, url, data, options)
+  public async put<T>(url: string, data: Record<string, Object>, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
+    return this.request<T>(http.RequestMethod.PUT, url, data, options)
   }
 
   public async delete<T>(url: string, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
-    return this.request<T>(HttpMethod.DELETE, url, undefined, options)
+    return this.request<T>(http.RequestMethod.DELETE, url, undefined, options)
   }
 }

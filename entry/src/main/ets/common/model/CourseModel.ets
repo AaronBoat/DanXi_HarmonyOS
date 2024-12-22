@@ -10,9 +10,36 @@ import { CourseTime } from './CourseTimeModel';
 export enum CourseType {
   REQUIRED = 'REQUIRED',
   ELECTIVE = 'ELECTIVE',
-  OPTIONAL = 'OPTIONAL'
+  OPTIONAL = 'OPTIONAL',
+  CUSTOM = 'CUSTOM'
 }
 
+export interface CourseJsonPart {
+  // 这些类型是推测出来的
+  kch: string;
+  kcmc: string;
+  jsxm: string;
+  jxdd?: string;
+  zcbh: string,
+  xq: number
+  ksjcdm: number
+  // 您可以根据实际情况添加更多的属性
+}
+
+export interface CourseJSON {
+  teacherIds: string[],
+  teacherNames: string[],
+  courseId: string,
+  courseName: string,
+  roomId: string,
+  roomName: string,
+  availableWeeks: number[],
+  times: CourseTime[],
+  courseType: CourseType,
+  credits: number,
+  description: string,
+  semester:string
+}
 /**
  * Course class
  */
@@ -29,6 +56,7 @@ export class Course {
   courseType: CourseType = CourseType.REQUIRED;
   credits: number = 0;
   description: string = '';
+  semester: string = "";
 
   constructor(
     courseId: string,
@@ -38,7 +66,8 @@ export class Course {
     time: string,
     courseType: CourseType = CourseType.REQUIRED,
     credits: number = 0,
-    description: string = ''
+    description: string = '',
+    semester: string = ""
   ) {
     this.courseId = courseId;
     this.courseName = courseName;
@@ -47,6 +76,7 @@ export class Course {
     this.courseType = courseType;
     this.credits = credits;
     this.description = description;
+    this.semester = semester;
   }
 
   /**
@@ -72,7 +102,7 @@ export class Course {
   static parseTimeFromString(timeStr: string): CourseTime[] {
     const times: CourseTime[] = [];
     const timePattern = /([0-9]+)\*unitCount\+([0-9]+)/g;
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = timePattern.exec(timeStr)) !== null) {
       const weekDay = parseInt(match[1]);
       const slot = parseInt(match[2]);
@@ -95,7 +125,14 @@ export class Course {
       throw new Error('Invalid HTML part');
     }
 
-    const [_, teacherIds, teacherNames, courseId, courseName, roomId, roomName, weeks] = match;
+    const teacherIds:string = match[1]
+    const teacherNames:string = match[2]
+    const courseId:string = match[3]
+    const courseName:string = match[4]
+    const roomId:string = match[5]
+    const roomName:string = match[6]
+    const weeks:string = match[7]
+
     const course = new Course(courseId, courseName, teacherNames, roomName, '');
     
     course.teacherIds = teacherIds.split(',');
@@ -117,7 +154,7 @@ export class Course {
    * @param jsonPart JSON object containing course info
    * @returns Course object
    */
-  static fromPGPart(jsonPart: any): Course {
+  static fromPGPart(jsonPart: CourseJsonPart): Course {
     const course = new Course(
       jsonPart.kch,
       jsonPart.kcmc,
@@ -137,7 +174,7 @@ export class Course {
    * Convert course to JSON object
    * @returns JSON object
    */
-  toJSON(): object {
+  toJSON(): CourseJSON {
     return {
       teacherIds: this.teacherIds,
       teacherNames: this.teacherNames,
@@ -149,7 +186,8 @@ export class Course {
       times: this.times,
       courseType: this.courseType,
       credits: this.credits,
-      description: this.description
+      description: this.description,
+      semester: this.semester
     };
   }
 }

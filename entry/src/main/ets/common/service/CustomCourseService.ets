@@ -11,24 +11,32 @@ import { StorageService } from './StorageService';
 @Observed
 export class CustomCourseService extends BaseService {
   private static instance: CustomCourseService;
-  private storageService: StorageService;
+  private storageService: StorageService | null;
   
   private static readonly CUSTOM_COURSES_KEY = 'custom_courses';
 
   private constructor() {
     super();
-    this.storageService = StorageService.getInstance();
+    this.storageService = null;
   }
 
   /**
    * Get singleton instance
    * @returns CustomCourseService instance
    */
-  static getInstance(): CustomCourseService {
+  public static async getInstance(): Promise<CustomCourseService> {
     if (!CustomCourseService.instance) {
       CustomCourseService.instance = new CustomCourseService();
+      // 确保 storageService 被正确初始化
+      await CustomCourseService.instance.initStorageService();
     }
     return CustomCourseService.instance;
+  }
+
+  private async initStorageService(): Promise<void> {
+    if (!this.storageService) {
+      this.storageService = await StorageService.getInstance();
+    }
   }
 
   /**
@@ -51,7 +59,7 @@ export class CustomCourseService extends BaseService {
       }
 
       courses.push(course);
-      await this.storageService.setObject(CustomCourseService.CUSTOM_COURSES_KEY, courses);
+      await this.storageService!.setObject(CustomCourseService.CUSTOM_COURSES_KEY, courses);
       return true;
     } catch (error) {
       console.error('添加自定义课程失败:', error);
@@ -68,7 +76,7 @@ export class CustomCourseService extends BaseService {
     try {
       const courses = await this.getCustomCourses();
       const updatedCourses = courses.filter(course => course.courseId !== courseId);
-      await this.storageService.setObject(CustomCourseService.CUSTOM_COURSES_KEY, updatedCourses);
+      await this.storageService!.setObject(CustomCourseService.CUSTOM_COURSES_KEY, updatedCourses);
       return true;
     } catch (error) {
       console.error('删除课程失败:', error);
@@ -98,7 +106,7 @@ export class CustomCourseService extends BaseService {
       }
 
       courses[courseIndex] = updatedCourse;
-      await this.storageService.setObject(CustomCourseService.CUSTOM_COURSES_KEY, courses);
+      await this.storageService!.setObject(CustomCourseService.CUSTOM_COURSES_KEY, courses);
       return true;
     } catch (error) {
       console.error('更新课程失败:', error);
@@ -112,7 +120,7 @@ export class CustomCourseService extends BaseService {
    */
   async getCustomCourses(): Promise<Course[]> {
     try {
-      const courses = await this.storageService.getObject(CustomCourseService.CUSTOM_COURSES_KEY) as Course[];
+      const courses = await this.storageService!.getObject<Course[]>(CustomCourseService.CUSTOM_COURSES_KEY, []) as Course[];
       return courses || [];
     } catch (error) {
       console.error('获取自定义课程失败:', error);
@@ -161,7 +169,9 @@ export class CustomCourseService extends BaseService {
    * @returns Minutes from 00:00
    */
   private timeToMinutes(time: string): number {
-    const [hours, minutes] = time.split(':').map(Number);
+    const hoursMinutes: number[] = time.split(':').map(Number);
+    const hours = hoursMinutes[0];
+    const minutes = hoursMinutes[1];
     return hours * 60 + minutes;
   }
 

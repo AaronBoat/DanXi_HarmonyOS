@@ -2,7 +2,7 @@
  * TimeTable model class
  */
 
-import { Course } from './CourseModel';
+import { Course, CourseJsonPart } from './CourseModel';
 import { CourseTime } from './CourseTimeModel';
 
 /**
@@ -62,6 +62,15 @@ export interface TimeTableModel {
   color?: string  // 课程颜色
 }
 
+export interface TimePoint {
+  hour: number;
+  minute: number;
+}
+
+export interface TimeTableJSON {
+  startDate: string,
+  courses: Course[]
+}
 /**
  * TimeTable class
  * Represents a complete course timetable
@@ -72,7 +81,7 @@ export class TimeTable {
   static readonly MINUTES_OF_COURSE = 45;
 
   // Course slot start times
-  static readonly COURSE_SLOT_START_TIMES = [
+  static readonly COURSE_SLOT_START_TIMES:TimePoint[] = [
     { hour: 8, minute: 0 },   // 1
     { hour: 8, minute: 55 },  // 2
     { hour: 9, minute: 55 },  // 3
@@ -217,7 +226,7 @@ export class TimeTable {
     const courses: Course[] = [];
     const coursePattern = /activity = new TaskActivity\("([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)","([^"]+)"\);/g;
     
-    let match;
+    let match: RegExpExecArray | null;
     while ((match = coursePattern.exec(html)) !== null) {
       try {
         const course = Course.fromHtmlPart(match[0]);
@@ -227,7 +236,7 @@ export class TimeTable {
       }
     }
 
-    return new TimeTable(startDate, courses);
+    return new TimeTable(courses, startDate);
   }
 
   /**
@@ -236,9 +245,9 @@ export class TimeTable {
    * @param json JSON data
    * @returns TimeTable object
    */
-  static fromPGJson(startDate: Date, json: any): TimeTable {
+  static fromPGJson(startDate: Date, json: CourseJsonPart[] | null): TimeTable {
     const courses: Course[] = [];
-    const courseData = json.data || [];
+    const courseData:CourseJsonPart[] = json ?? [];
 
     for (const item of courseData) {
       try {
@@ -249,14 +258,14 @@ export class TimeTable {
       }
     }
 
-    return new TimeTable(startDate, courses);
+    return new TimeTable(courses, startDate);
   }
 
   /**
    * Convert to JSON object
    * @returns JSON object
    */
-  toJSON(): object {
+  toJSON(): TimeTableJSON {
     return {
       startDate: this.startDate.toISOString(),
       courses: this.courses

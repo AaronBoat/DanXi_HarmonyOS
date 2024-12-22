@@ -2,6 +2,11 @@
  * Course time model class
  */
 
+export interface CourseTimeJSON {
+  weekDay: number;
+  slot: number;
+}
+
 /**
  * Course time class
  * Represents a specific time slot for a course
@@ -36,7 +41,7 @@ export class CourseTime {
       11: '19:25',
       12: '20:20'
     };
-    return timeMap[this.slot] || '00:00';
+    return timeMap[this.slot] ?? '00:00';
   }
 
   /**
@@ -59,7 +64,7 @@ export class CourseTime {
       11: '20:10',
       12: '21:05'
     };
-    return timeMap[this.slot] || '00:00';
+    return timeMap[this.slot] ?? '00:00';
   }
 
   /**
@@ -76,7 +81,7 @@ export class CourseTime {
       5: '周六',
       6: '周日'
     };
-    return weekDayMap[this.weekDay] || '未知';
+    return weekDayMap[this.weekDay] ?? '未知';
   }
 
   /**
@@ -91,7 +96,7 @@ export class CourseTime {
    * Convert to JSON object
    * @returns JSON object
    */
-  toJSON(): { weekDay: number; slot: number } {
+  toJSON(): CourseTimeJSON {
     return {
       weekDay: this.weekDay,
       slot: this.slot

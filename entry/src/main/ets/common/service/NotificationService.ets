@@ -7,10 +7,10 @@ export class NotificationService {
   private constructor() {}
 
   public static getInstance(): NotificationService {
-    if (!this._instance) {
-      this._instance = new NotificationService()
+    if (!NotificationService._instance) {
+      NotificationService._instance = new NotificationService()
     }
-    return this._instance
+    return NotificationService._instance
   }
 
   public showToast(message: string, duration: number = 2000): void {
