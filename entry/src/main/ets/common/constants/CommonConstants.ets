@@ -9,7 +9,25 @@ export class CommonConstants {
   /**
    * 路由路径
    */
-  static readonly HOME_PAGE = 'pages/home/HomePage';
-  static readonly COURSE_PAGE = 'pages/course/CoursePage';
-  static readonly PROFILE_PAGE = 'pages/profile/ProfilePage';
+  static readonly HOME_PAGE = 'pages/HomePage';
+  static readonly COURSE_PAGE = 'pages/CoursePage';
+  static readonly PROFILE_PAGE = 'pages/ProfilePage';
+  static readonly DEFAULT_PAGE = CommonConstants.COURSE_PAGE;
+
+  /**
+   * 资源路径
+   */
+  static readonly APP_ICON = 'app.media.app_icon';
+
+  /**
+   * 网址URL
+   */
+  static readonly _LOGIN_URL = "https://uis.fudan.edu.cn/authserver/login?service=http%3A%2F%2Fjwc.fudan.edu.cn%2Feb%2Fb7%2Fc9397a388023%2Fpage.psp";
+
+  /**
+   * 颜色
+   */
+  static readonly SELECTED_BUTTON_COLOR = '#1698CE';
+  static readonly UNSELECTED_BUTTON_COLOR = '#F0F0F0';
+
 }

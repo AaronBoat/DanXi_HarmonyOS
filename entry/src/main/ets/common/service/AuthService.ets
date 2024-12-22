@@ -37,7 +37,7 @@ export class AuthService {
         "username": username,
         "password": password
       }
-      const response: ResponseResult<string> = await this.httpService.post('https://your-auth-server.com/login', data);
+      const response: ResponseResult<string> = await this.httpService.post('https://uis.fudan.edu.cn/authserver/login', data);
 
       const result: LoginResponse = JSON.parse(response.data ?? "");
       if (result.success) {
@@ -52,7 +52,7 @@ export class AuthService {
         });
 
         // 跳转到主页
-        router.replaceUrl({ url: 'pages/CoursePage' });
+        router.replaceUrl({ url: 'pages/Index' });
         return true;
       } else {
         // 显示登录失败提示
@@ -87,7 +87,7 @@ export class AuthService {
       let data: Record<string, Object> = {
         "token": token
       }
-      await this.httpService.post<void>('https://your-auth-server.com/logout', data); // 显式指定泛型参数
+      await this.httpService.post<void>('https://uis.fudan.edu.cn/authserver/logout', data); // 显式指定泛型参数
     } catch (error) {
       console.error('Logout server call failed:', error);
     }

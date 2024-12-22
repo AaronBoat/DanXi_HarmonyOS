@@ -3,6 +3,7 @@ import promptAction from '@ohos.promptAction';
 import { AuthService } from '../common/service/AuthService';
 import http from '@ohos.net.http';
 import { StorageService } from '../common/service/StorageService';
+import { CommonConstants } from '../common/constants/CommonConstants';
 
 enum UserGroup {
   FUDAN_UNDERGRADUATE_STUDENT = 'FUDAN_UNDERGRADUATE_STUDENT',
@@ -37,6 +38,7 @@ struct LoginPage {
   @State isLoading: boolean = false;
   @State userGroup: UserGroup = UserGroup.FUDAN_UNDERGRADUATE_STUDENT;
   @State errorText: string = '';
+  @State standard_output: string = 'standard output（测试）';
 
   private authService: AuthService = AuthService.getInstance();
   private storageService: StorageService | null = null;
@@ -79,11 +81,11 @@ struct LoginPage {
       userGroup: UserGroup.VISITOR
     };
     await this.storageService?.setObject('userInfo', userInfo);
-    router.replaceUrl({ url: 'pages/CoursePage' });
+    router.replaceUrl({ url: CommonConstants.DEFAULT_PAGE });
   }
 
   async uisLogin(): Promise<void> {
-    const loginUrl = 'https://uis.fudan.edu.cn/authserver/login?service=http%3A%2F%2Fjwc.fudan.edu.cn%2Feb%2Fb7%2Fc9397a388023%2Fpage.psp';
+    const loginUrl: string = CommonConstants._LOGIN_URL;
     const httpRequest = http.createHttp();
 
     try {
@@ -94,6 +96,7 @@ struct LoginPage {
 
       // 解析登录页面，获取隐藏的表单字段
       const loginPageContent = loginPageResponse.result as string;
+      this.standard_output = loginPageContent; // 测试
       const formData = this.parseLoginForm(loginPageContent);
       formData['username'] = this.username;
       formData['password'] = this.password;
@@ -120,9 +123,9 @@ struct LoginPage {
       };
       await this.storageService?.setObject('userInfo', userInfo);
 
-      router.replaceUrl({ url: 'pages/CoursePage' });
+      router.replaceUrl({ url: CommonConstants.DEFAULT_PAGE });
     } catch (error) {
-      throw Error(error);
+      throw error as Error;
     } finally {
       httpRequest.destroy();
     }
@@ -157,6 +160,7 @@ struct LoginPage {
   }
 
   checkLoginResponse(responseText: string) {
+    this.standard_output = responseText;
     if (responseText.includes('密码有误')) {
       throw new Error('密码错误');
     }
@@ -166,6 +170,7 @@ struct LoginPage {
     if (responseText.includes('网络维护中')) {
       throw new Error('系统维护中');
     }
+    throw new Error('密码错误'); // 测试
   }
 
   async fetchStudentName(): Promise<string> {
@@ -198,7 +203,7 @@ struct LoginPage {
   @Builder
   loginHeader(): void {
     Column() {
-      Image($r('app.media.app_icon'))
+      Image($r(CommonConstants.APP_ICON))
         .width(100)
         .height(100)
         .margin({ top: 50, bottom: 20 })
@@ -219,11 +224,12 @@ struct LoginPage {
       Row() {
         ForEach(Object.values(UserGroup), (group: UserGroup) => {
           Button(Reflect.get(kUserGroupDescription, group))
-            .backgroundColor(this.userGroup === group ? '#1698CE' : '#F0F0F0')
+            .backgroundColor(this.userGroup === group ? CommonConstants.SELECTED_BUTTON_COLOR : CommonConstants.UNSELECTED_BUTTON_COLOR)
             .fontColor(this.userGroup === group ? Color.White : Color.Black)
             .margin({ right: 10 })
             .onClick(() => {
               this.userGroup = group;
+              this.standard_output = group; // 测试
             })
         })
       }
@@ -277,6 +283,7 @@ struct LoginPage {
         .enabled(!this.isLoading)
         .onClick(() => {
           this.login();
+          this.standard_output = "正在登录..."; // 测试
         })
 
       // 忘记密码
@@ -289,6 +296,13 @@ struct LoginPage {
             duration: 2000
           });
         })
+
+      // 标准输出（测试用）
+      Text(this.standard_output)
+        .fontSize(10)
+        .fontColor(Color.White)
+        .backgroundColor(Color.Black)
+        .width("90%")
     }
     .width('100%')
     .alignItems(HorizontalAlign.Center)
