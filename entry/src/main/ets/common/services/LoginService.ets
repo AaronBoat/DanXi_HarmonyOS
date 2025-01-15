@@ -3,224 +3,14 @@ import { CommonConstants } from '../constants/CommonConstants';
 import { UserInfo, UserGroup } from '../../models/UserInfo';
 import { StorageService } from './StorageService';
 
-class KeyValuePair {
-  key: string;
-  value: string;
-
-  constructor(key: string, value: string) {
-    this.key = key;
-    this.value = value;
-  }
-}
-
-class ObjectLiteral {
-  private data: Record<string, any> = {};
-
-  constructor() {}
-
-  static create(): ObjectLiteral {
-    return new ObjectLiteral();
-  }
-
-  set(key: string, value: any): ObjectLiteral {
-    this.data[key] = value;
-    return this;
-  }
-
-  get(key: string): any {
-    return this.data[key];
-  }
-
-  toJSON(): string {
-    return JSON.stringify(this.data);
-  }
-
-  static fromJSON(json: string): ObjectLiteral {
-    const obj = new ObjectLiteral();
-    obj.data = JSON.parse(json);
-    return obj;
-  }
-}
-
-class SimpleObject {
-  private pairs: Array<KeyValuePair> = [];
-
-  constructor() {}
-
-  static create(): SimpleObject {
-    return new SimpleObject();
-  }
-
-  set(key: string, value: string): SimpleObject {
-    const existingPair = this.pairs.find(p => p.key === key);
-    if (existingPair) {
-      existingPair.value = value;
-    } else {
-      this.pairs.push(new KeyValuePair(key, value));
-    }
-    return this;
-  }
-
-  get(key: string): string | undefined {
-    const pair = this.pairs.find(p => p.key === key);
-    return pair ? pair.value : undefined;
-  }
-
-  toObject(): ObjectLiteral {
-    const obj = ObjectLiteral.create();
-    this.pairs.forEach(pair => {
-      obj.set(pair.key, pair.value);
-    });
-    return obj;
-  }
-}
-
-class StringMap {
-  private data: SimpleObject = SimpleObject.create();
-
-  set(key: string, value: string): void {
-    this.data.set(key, value);
-  }
-
-  get(key: string): string | undefined {
-    return this.data.get(key);
-  }
-
-  toObject(): object {
-    return this.data.toObject();
-  }
-}
-
-class HttpHeader {
-  private headers: StringMap = new StringMap();
-
-  constructor() {
-    this.headers = new StringMap();
-  }
-
-  static create(): HttpHeader {
-    return new HttpHeader();
-  }
-
-  add(key: string, value: string): HttpHeader {
-    this.headers.set(key, value);
-    return this;
-  }
-
-  toObject(): object {
-    return this.headers.toObject();
-  }
-}
-
-class LoginResponse {
+interface LoginResponse {
   name?: string;
   token?: string;
   message?: string;
-
-  constructor(name?: string, token?: string, message?: string) {
-    this.name = name;
-    this.token = token;
-    this.message = message;
-  }
-
-  static fromObject(obj: object): LoginResponse {
-    const response = new LoginResponse();
-    Object.assign(response, obj);
-    return response;
-  }
 }
 
-class DeviceInfo {
-  platform: string;
-  version: string;
-  deviceModel: string;
-
-  constructor(platform: string, version: string, deviceModel: string) {
-    this.platform = platform;
-    this.version = version;
-    this.deviceModel = deviceModel;
-  }
-}
-
-class LoginRequest {
-  username: string;
-  password: string;
-  deviceInfo: DeviceInfo;
-
-  constructor(username: string, password: string, deviceInfo: DeviceInfo) {
-    this.username = username;
-    this.password = password;
-    this.deviceInfo = deviceInfo;
-  }
-
-  toJSON(): string {
-    return JSON.stringify({
-      username: this.username,
-      password: this.password,
-      deviceInfo: {
-        platform: this.deviceInfo.platform,
-        version: this.deviceInfo.version,
-        deviceModel: this.deviceInfo.deviceModel
-      }
-    });
-  }
-}
-
-class HttpRequestOptions {
-  method: http.RequestMethod;
-  header: object;
-  extraData?: string;
-  connectTimeout?: number;
-  readTimeout?: number;
-
-  constructor(method: http.RequestMethod, header: HttpHeader, extraData?: string, 
-    connectTimeout?: number, readTimeout?: number) {
-    this.method = method;
-    this.header = header.toObject();
-    this.extraData = extraData;
-    this.connectTimeout = connectTimeout;
-    this.readTimeout = readTimeout;
-  }
-}
-
-class HttpRequest {
-  private request: http.HttpRequest;
-
-  constructor() {
-    this.request = http.createHttp();
-  }
-
-  async request(url: string, options: HttpRequestOptions): Promise<http.HttpResponse> {
-    return await this.request.request(url, options);
-  }
-
-  destroy(): void {
-    this.request.destroy();
-  }
-}
-
-class FormData {
-  private data: StringMap = new StringMap();
-
-  set(key: string, value: string): void {
-    this.data.set(key, value);
-  }
-
-  get(key: string): string | undefined {
-    return this.data.get(key);
-  }
-
-  entries(): Array<[string, string]> {
-    const entries: Array<[string, string]> = [];
-    const obj = this.data.toObject();
-    Object.keys(obj).forEach(key => {
-      entries.push([key, obj[key]]);
-    });
-    return entries;
-  }
-}
-
-class UISUserInfo {
+// 修改用户信息接口定义
+interface UISUserInfo {
   name?: string;
   studentId?: string;
   department?: string;
@@ -229,10 +19,6 @@ class UISUserInfo {
   class?: string;
   email?: string;
   phone?: string;
-
-  constructor(data: SimpleObject = SimpleObject.create()) {
-    Object.assign(this, data);
-  }
 }
 
 @Observed
@@ -255,49 +41,57 @@ export class LoginService {
   }
 
   async dantanLogin(username: string, password: string): Promise<void> {
-    let httpRequest: HttpRequest | null = null;
+    let httpRequest: http.HttpRequest | null = null;
     try {
-      httpRequest = new HttpRequest();
+      httpRequest = http.createHttp();
       const loginUrl = `${CommonConstants.API_BASE_URL}${CommonConstants.API_LOGIN_ENDPOINT}`;
       console.info(`正在尝试登录，URL: ${loginUrl}`);
       
-      const deviceInfo = new DeviceInfo('HarmonyOS', '1.0.0', 'Unknown');
-      const loginData = new LoginRequest(username, password, deviceInfo);
+      const response = await httpRequest.request(loginUrl, {
+        method: http.RequestMethod.POST,
+        header: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        extraData: JSON.stringify({
+          username: username,
+          password: password,
+          deviceInfo: {
+            platform: 'HarmonyOS',
+            version: '1.0.0',
+            deviceModel: 'Unknown'
+          }
+        }),
+        connectTimeout: CommonConstants.HTTP_TIMEOUT,
+        readTimeout: CommonConstants.HTTP_TIMEOUT
+      });
 
-      const headers = HttpHeader.create()
-        .add('Content-Type', 'application/json')
-        .add('Accept', 'application/json');
-
-      const requestOptions = new HttpRequestOptions(
-        http.RequestMethod.POST,
-        headers,
-        loginData.toJSON(),
-        CommonConstants.HTTP_TIMEOUT,
-        CommonConstants.HTTP_TIMEOUT
-      );
-
-      const response = await httpRequest.request(loginUrl, requestOptions);
       console.info(`登录响应状态码: ${response.responseCode}`);
 
-      const responseObj = ObjectLiteral.fromJSON(response.result as string);
-      const responseData = LoginResponse.fromObject(responseObj);
-      console.info('登录响应内容:', responseObj.toJSON());
-      
-      if (response.responseCode === CommonConstants.HTTP_CODE_SUCCESS && responseData.token) {
-        const userInfo = new UserInfo();
-        userInfo.id = username;
-        userInfo.password = password;
-        userInfo.name = responseData.name || username;
-        userInfo.userGroup = UserGroup.VISITOR;
+      try {
+        const responseData = JSON.parse(response.result as string) as LoginResponse;
+        console.info('登录响应内容:', JSON.stringify(responseData));
         
-        if (this.storageService) {
-          await this.storageService.setObject(CommonConstants.STORAGE_KEY_USER_INFO, userInfo);
-          await this.storageService.setString(CommonConstants.STORAGE_KEY_TOKEN, responseData.token);
+        if (response.responseCode === CommonConstants.HTTP_CODE_SUCCESS && responseData.token) {
+          const userInfo: UserInfo = {
+            id: username,
+            password: password,
+            name: responseData.name || username,
+            userGroup: UserGroup.VISITOR
+          };
+          
+          if (this.storageService) {
+            await this.storageService.setObject(CommonConstants.STORAGE_KEY_USER_INFO, userInfo);
+            await this.storageService.setString(CommonConstants.STORAGE_KEY_TOKEN, responseData.token);
+          } else {
+            throw new Error('存储服务未初始化');
+          }
         } else {
-          throw new Error('存储服务未初始化');
+          throw new Error(responseData.message || '用户名或密码错误');
         }
-      } else {
-        throw new Error(responseData.message || '用户名或密码错误');
+      } catch (parseError) {
+        console.error('解析响应数据失败:', response.result);
+        throw new Error('服务器响应格式错误');
       }
     } catch (error) {
       console.error('登录过程出错:', error);
@@ -320,38 +114,35 @@ export class LoginService {
   }
 
   async uisLogin(username: string, password: string): Promise<void> {
-    let httpRequest: HttpRequest | null = null;
+    let httpRequest: http.HttpRequest | null = null;
     try {
-      httpRequest = new HttpRequest();
+      httpRequest = http.createHttp();
       const loginUrl = CommonConstants.UIS_LOGIN_URL;
       
-      const headers = HttpHeader.create()
-        .add('User-Agent', 'Mozilla/5.0');
+      const loginPageResponse = await httpRequest.request(loginUrl, {
+        method: http.RequestMethod.GET,
+        header: {
+          'User-Agent': 'Mozilla/5.0'
+        }
+      });
 
-      const getRequestOptions = new HttpRequestOptions(
-        http.RequestMethod.GET,
-        headers
-      );
-
-      const loginPageResponse = await httpRequest.request(loginUrl, getRequestOptions);
       const loginPageContent = loginPageResponse.result as string;
       const formData = this.parseLoginForm(loginPageContent);
-      formData.set('username', username);
-      formData.set('password', password);
+      formData['username'] = username;
+      formData['password'] = password;
 
-      const postHeaders = HttpHeader.create()
-        .add('Content-Type', 'application/x-www-form-urlencoded')
-        .add('User-Agent', 'Mozilla/5.0');
+      const loginResponse = await httpRequest.request(loginUrl, {
+        method: http.RequestMethod.POST,
+        header: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'Mozilla/5.0'
+        },
+        extraData: this.encodeFormData(formData)
+      });
 
-      const postRequestOptions = new HttpRequestOptions(
-        http.RequestMethod.POST,
-        postHeaders,
-        this.encodeFormData(formData)
-      );
-
-      const loginResponse = await httpRequest.request(loginUrl, postRequestOptions);
       const responseText = loginResponse.result as string;
       
+      // 检查登录结果
       if (responseText.includes('密码有误')) {
         throw new Error('密码错误');
       }
@@ -365,11 +156,13 @@ export class LoginService {
         throw new Error('登录失败');
       }
 
-      const userInfo = new UserInfo();
-      userInfo.id = username;
-      userInfo.password = password;
-      userInfo.name = await this.fetchStudentName();
-      userInfo.userGroup = UserGroup.FUDAN_UNDERGRADUATE_STUDENT;
+      // 登录成功，保存用户信息
+      const userInfo: UserInfo = {
+        id: username,
+        password: password,
+        name: await this.fetchStudentName(),
+        userGroup: UserGroup.FUDAN_UNDERGRADUATE_STUDENT
+      };
 
       if (this.storageService) {
         await this.storageService.setObject(CommonConstants.STORAGE_KEY_USER_INFO, userInfo);
@@ -388,8 +181,8 @@ export class LoginService {
     }
   }
 
-  private parseLoginForm(html: string): FormData {
-    const formData = new FormData();
+  private parseLoginForm(html: string): Record<string, string> {
+    const formData: Record<string, string> = {};
     const inputMatches = html.match(/<input[^>]+name="([^"]+)"[^>]+value="([^"]*)"[^>]*>/g);
 
     if (inputMatches) {
@@ -398,7 +191,7 @@ export class LoginService {
         const valueMatch = match.match(/value="([^"]*)"/);
 
         if (nameMatch && valueMatch) {
-          formData.set(nameMatch[1], valueMatch[1]);
+          formData[nameMatch[1]] = valueMatch[1];
         }
       }
     }
@@ -406,32 +199,27 @@ export class LoginService {
     return formData;
   }
 
-  private encodeFormData(formData: FormData): string {
-    return formData.entries().map(([key, value]) => {
-      return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  private encodeFormData(data: Record<string, string>): string {
+    return Object.keys(data).map((key) => {
+      return `${encodeURIComponent(key)}=${encodeURIComponent(data[key])}`;
     }).join('&');
   }
 
   private async fetchStudentName(): Promise<string> {
-    let httpRequest: HttpRequest | null = null;
+    let httpRequest: http.HttpRequest | null = null;
     try {
-      httpRequest = new HttpRequest();
+      httpRequest = http.createHttp();
       const userInfoUrl = CommonConstants.UIS_USER_INFO_URL;
       
-      const headers = HttpHeader.create()
-        .add('User-Agent', 'Mozilla/5.0');
-
-      const requestOptions = new HttpRequestOptions(
-        http.RequestMethod.GET,
-        headers
-      );
-
-      const response = await httpRequest.request(userInfoUrl, requestOptions);
+      const response = await httpRequest.request(userInfoUrl, {
+        method: http.RequestMethod.GET,
+        header: {
+          'User-Agent': 'Mozilla/5.0'
+        }
+      });
 
       if (response.responseCode === CommonConstants.HTTP_CODE_SUCCESS) {
-        const responseObj = SimpleObject.create();
-        Object.assign(responseObj, JSON.parse(response.result as string));
-        const userInfoData = new UISUserInfo(responseObj);
+        const userInfoData = JSON.parse(response.result as string) as UISUserInfo;
         return userInfoData.name || '未知用户';
       }
       
