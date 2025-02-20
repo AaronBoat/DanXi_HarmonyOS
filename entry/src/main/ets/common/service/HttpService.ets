@@ -1,5 +1,7 @@
 import http from '@ohos.net.http'
 import { ResponseResult } from '../model/ResponseResult'
+import HttpRequest from '@ohos.net.http'
+import HttpResponse from '@ohos.net.http'
 
 // 使用http模块中定义的RequestMethod类型
 export type HttpMethod = http.RequestMethod;
@@ -78,5 +80,28 @@ export default class HttpService {
 
   public async delete<T>(url: string, options?: HttpRequestOptions): Promise<ResponseResult<T>> {
     return this.request<T>(http.RequestMethod.DELETE, url, undefined, options)
+  }
+
+  public async get(url: string): Promise<HttpResponse> {
+    const request = new HttpRequest();
+    request.url = url;
+    request.method = 'GET';
+    return await request.send();
+  }
+
+  public async post(url: string, data: Record<string, any>): Promise<HttpResponse> {
+    const request = new HttpRequest();
+    request.url = url;
+    request.method = 'POST';
+    request.data = data;
+    return await request.send();
+  }
+
+  public setOptions(options: any) {
+    // 设置请求的默认选项
+  }
+
+  async fetchDataWithParams(url: string, params: Record<string, any>): Promise<HttpResponse> {
+    // 实现带参数的获取数据
   }
 }

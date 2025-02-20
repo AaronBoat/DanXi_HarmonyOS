@@ -30,4 +30,19 @@ export class CommonConstants {
   static readonly SELECTED_BUTTON_COLOR = '#1698CE';
   static readonly UNSELECTED_BUTTON_COLOR = '#F0F0F0';
 
+  static get CAPTCHA_CODE_NEEDED(): string {
+    return "请输入验证码";
+  }
+
+  static get CREDENTIALS_INVALID(): string {
+    return "密码有误";
+  }
+
+  static get WEAK_PASSWORD(): string {
+    return "弱密码提示";
+  }
+
+  static get UNDER_MAINTENANCE(): string {
+    return "网络维护中 | Under Maintenance";
+  }
 }
