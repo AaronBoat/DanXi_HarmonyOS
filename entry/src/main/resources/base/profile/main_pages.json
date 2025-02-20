@@ -1,5 +1,6 @@
 {
   "src": [
+    "pages/SplashPage",
     "pages/LoginPage",
     "pages/CoursePage",
     "pages/Index",

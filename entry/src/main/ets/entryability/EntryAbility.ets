@@ -18,8 +18,8 @@ export default class EntryAbility extends UIAbility {
   }
 
   onWindowStageCreate(windowStage: window.WindowStage): void {
-    // Main window is created, set main page
-    windowStage.loadContent('pages/LoginPage', (err: Error | null) => {
+    // Main window is created, set main page to SplashPage
+    windowStage.loadContent('pages/SplashPage', (err: Error | null) => {
       if (err) {
         console.error(`Failed to load the content. Cause: ${JSON.stringify(err)}`);
       }

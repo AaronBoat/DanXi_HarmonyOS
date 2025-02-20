@@ -4,6 +4,7 @@ import { AuthService } from '../common/service/AuthService';
 import http from '@ohos.net.http';
 import { StorageService } from '../common/service/StorageService';
 import { CommonConstants } from '../common/constants/CommonConstants';
+import window from '@ohos.window';
 
 enum UserGroup {
   FUDAN_UNDERGRADUATE_STUDENT = 'FUDAN_UNDERGRADUATE_STUDENT',
@@ -38,13 +39,32 @@ struct LoginPage {
   @State isLoading: boolean = false;
   @State userGroup: UserGroup = UserGroup.FUDAN_UNDERGRADUATE_STUDENT;
   @State errorText: string = '';
-  @State standard_output: string = 'standard output（测试）';
-
+  @State keyboardHeight: number = 0;
+  
   private authService: AuthService = AuthService.getInstance();
   private storageService: StorageService | null = null;
+  private context = getContext(this);
 
   async aboutToAppear(): Promise<void> {
     this.storageService = await StorageService.getInstance();
+    // 获取当前窗口并设置键盘属性
+    try {
+      let windowClass = await window.getLastWindow(this.context);
+      windowClass.on('keyboardHeightChange', (height: number) => {
+        this.keyboardHeight = height;
+      });
+    } catch (error) {
+      console.error('Failed to get window:', error);
+    }
+  }
+
+  aboutToDisappear() {
+    // 移除键盘监听
+    window.getLastWindow(this.context).then(windowClass => {
+      windowClass.off('keyboardHeightChange');
+    }).catch((error: Error) => {
+      console.error('Failed to remove keyboard listener:', error.message);
+    });
   }
 
   async login(): Promise<void> {
@@ -57,15 +77,7 @@ struct LoginPage {
     this.errorText = '';
 
     try {
-      switch (this.userGroup) {
-        case UserGroup.VISITOR:
-          await this.visitorLogin();
-          break;
-        case UserGroup.FUDAN_UNDERGRADUATE_STUDENT:
-        case UserGroup.FUDAN_POSTGRADUATE_STUDENT:
-          await this.uisLogin();
-          break;
-      }
+      await this.uisLogin();
     } catch (error) {
       this.handleLoginError(error);
     } finally {
@@ -96,7 +108,6 @@ struct LoginPage {
 
       // 解析登录页面，获取隐藏的表单字段
       const loginPageContent = loginPageResponse.result as string;
-      this.standard_output = loginPageContent; // 测试
       const formData = this.parseLoginForm(loginPageContent);
       formData['username'] = this.username;
       formData['password'] = this.password;
@@ -160,7 +171,6 @@ struct LoginPage {
   }
 
   checkLoginResponse(responseText: string) {
-    this.standard_output = responseText;
     if (responseText.includes('密码有误')) {
       throw new Error('密码错误');
     }
@@ -203,15 +213,24 @@ struct LoginPage {
   @Builder
   loginHeader(): void {
     Column() {
-      Image($r(CommonConstants.APP_ICON))
-        .width(100)
-        .height(100)
-        .margin({ top: 50, bottom: 20 })
+      Image($r('app.media.danxi_cat'))
+        .width(70)
+        .height(70)
+        .margin({ top: 120, bottom: 40 })
+        .objectFit(ImageFit.Contain)
+        .borderRadius(24)  // 添加圆角，遵循现代设计趋势
+        .shadow({  // 添加轻微阴影效果
+          radius: 20,
+          color: '#00000020',
+          offsetX: 0,
+          offsetY: 4
+        })
 
-      Text('登录')
+      Text('复旦本科生 UIS 登录')
         .fontSize(24)
-        .fontWeight(FontWeight.Bold)
-        .margin({ bottom: 20 })
+        .fontWeight(FontWeight.Medium)
+        .fontColor('#003153')
+        .margin({ bottom: 60 })
     }
     .width('100%')
     .alignItems(HorizontalAlign.Center)
@@ -220,112 +239,111 @@ struct LoginPage {
   @Builder
   loginForm(): void {
     Column() {
-      // 用户组选择
-      Row() {
-        ForEach(Object.values(UserGroup), (group: UserGroup) => {
-          Button(Reflect.get(kUserGroupDescription, group))
-            .backgroundColor(this.userGroup === group ? CommonConstants.SELECTED_BUTTON_COLOR : CommonConstants.UNSELECTED_BUTTON_COLOR)
-            .fontColor(this.userGroup === group ? Color.White : Color.Black)
-            .margin({ right: 10 })
-            .onClick(() => {
-              this.userGroup = group;
-              this.standard_output = group; // 测试
-            })
-        })
-      }
-      .margin({ bottom: 20 })
-
       // 用户名输入
-      TextInput({
-        placeholder: '请输入用户名',
-        text: this.username
-      })
-        .width('90%')
-        .height(50)
-        .margin({ bottom: 15 })
-        .backgroundColor(Color.White)
-        .borderRadius(10)
-        .padding({ left: 15 })
-        .onChange((value: string) => {
-          this.username = value;
+      Row() {
+        Image($r('app.media.icon_user'))  // 请确保添加了对应的图标资源
+          .width(20)
+          .height(20)
+          .margin({ right: 12 })
+          .fillColor('#666666')
+        
+        TextInput({
+          placeholder: '学号',
+          text: this.username
         })
+          .width('100%')
+          .height(48)
+          .backgroundColor('#F5F5F5')
+          .borderRadius(8)
+          .padding({ left: 16 })
+          .onChange((value: string) => {
+            this.username = value;
+          })
+      }
+      .width('100%')
+      .margin({ bottom: 16 })
+      .alignItems(VerticalAlign.Center)
 
       // 密码输入
-      TextInput({
-        placeholder: '请输入密码',
-        text: this.password
-      })
-        .width('90%')
-        .height(50)
-        .margin({ bottom: 10 })
-        .backgroundColor(Color.White)
-        .borderRadius(10)
-        .padding({ left: 15 })
-        .type(InputType.Password)
-        .onChange((value: string) => {
-          this.password = value;
+      Row() {
+        Image($r('app.media.icon_lock'))  // 请确保添加了对应的图标资源
+          .width(20)
+          .height(20)
+          .margin({ right: 12 })
+          .fillColor('#666666')
+        
+        TextInput({
+          placeholder: '密码',
+          text: this.password
         })
+          .width('100%')
+          .height(48)
+          .backgroundColor('#F5F5F5')
+          .borderRadius(8)
+          .padding({ left: 16 })
+          .type(InputType.Password)
+          .onChange((value: string) => {
+            this.password = value;
+          })
+      }
+      .width('100%')
+      .alignItems(VerticalAlign.Center)
 
       // 错误提示
       Text(this.errorText)
         .fontSize(14)
-        .fontColor(Color.Red)
-        .margin({ bottom: 10 })
+        .fontColor('#FF3B30')
+        .margin({ top: 8 })
         .opacity(this.errorText ? 1 : 0)
 
       // 登录按钮
       Button(this.isLoading ? '登录中...' : '登录')
-        .width('90%')
-        .height(50)
-        .backgroundColor('#1698CE')
-        .borderRadius(10)
-        .margin({ bottom: 15 })
+        .width('100%')
+        .height(48)
+        .fontSize(16)
+        .fontWeight(FontWeight.Medium)
+        .backgroundColor('#003153')
+        .borderRadius(8)
+        .margin({ top: 32 })
         .enabled(!this.isLoading)
         .onClick(() => {
           this.login();
-          this.standard_output = "正在登录..."; // 测试
         })
 
       // 忘记密码
       Text('忘记密码？')
         .fontSize(14)
-        .fontColor(Color.Gray)
+        .fontColor('#003153')
+        .margin({ top: 16 })
         .onClick(() => {
           promptAction.showToast({
-            message: '请联系管理员找回密码',
+            message: '请访问 UIS 网站重置密码',
             duration: 2000
           });
         })
-
-      // 标准输出（测试用）
-      Text(this.standard_output)
-        .fontSize(10)
-        .fontColor(Color.White)
-        .backgroundColor(Color.Black)
-        .width("90%")
     }
     .width('100%')
-    .alignItems(HorizontalAlign.Center)
+    .padding({ left: 24, right: 24 })
   }
 
   build(): void {
     Column() {
-      // 顶部空白区域
-      Blank().height('10%')
-
-      // 登录头部
-      this.loginHeader()
-
-      // 登录表单
-      this.loginForm()
-
-      // 底部空白区域
-      Blank()
+      Scroll() {
+        Column() {
+          this.loginHeader()
+          this.loginForm()
+          Blank()
+        }
+        .width('100%')
+        .height('100%')
+        .backgroundColor(Color.White)
+        .padding({ bottom: this.keyboardHeight }) // 添加键盘高度的padding
+      }
+      .scrollable(ScrollDirection.Vertical)
+      .edgeEffect(EdgeEffect.Spring)
     }
     .width('100%')
     .height('100%')
-    .backgroundColor('#F1F3F5')
-    .padding({ left: 20, right: 20 })
   }
 }
 
